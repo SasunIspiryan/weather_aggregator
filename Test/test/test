@@ -1,0 +1,15 @@
+hello world
+
+Docker is an OS‑level virtualization (or containerization) platform, which allows applications to share the host OS kernel instead of running a separate guest OS like in traditional virtualization. This design makes Docker containers lightweight, fast, and portable, while keeping them isolated from one another.
+
+    Written in the Go programming language.
+    Supports Windows, macOS, and Linux installations (Docker Engine runs natively on Linux).
+    Solves the “works on my machine” problem by ensuring code runs identically across environments.
+    Unlike VMware (hardware‑level virtualization), Docker operates at the OS level.
+
+Before Docker:
+
+Deploying applications across environments was often difficult, dependencies, configs, and OS variations caused “works here but not th
+
+ps aux | grep "OS"
+
