@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; }
+        h1 { color: #333; }
+        .card { background: white; padding: 20px; margin: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .price { font-size: 1.5em; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Crypto Prices</h1>
+    <div id="crypto-container"></div>
+
+    <script>
+        async function fetchCrypto() {
+            const res = await fetch("/api/v1/crypto");
+            const data = await res.json();
+
+            if (data.error) {
+                document.getElementById("crypto-container").innerHTML = `<p style="color:red;">${data.error}</p>`;
+                return;
+            }
+
+            document.getElementById("crypto-container").innerHTML = `
+                <div class="card">
+                    <strong>Bitcoin (BTC):</strong> <span class="price">$${data.bitcoin_usd}</span>
+                </div>
+                <div class="card">
+                    <strong>Ethereum (ETH):</strong> <span class="price">$${data.ethereum_usd}</span>
+                </div>
+                <div class="card">
+                    <strong>Cardano (ADA):</strong> <span class="price">$${data.cardano_usd}</span>
+                </div>
+                <div class="card">
+                    <strong>ETH/BTC Ratio:</strong> ${data.eth_btc_ratio}
+                </div>
+                <p><em>Environment: ${data.environment}</em></p>
+            `;
+        }
+
+        fetchCrypto();
+        setInterval(fetchCrypto, 30000); // refresh every 30s
+    </script>
+</body>
+</html>
+

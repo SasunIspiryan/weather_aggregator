@@ -1,0 +1,97 @@
+/* style for entire webpage */
+body{
+
+/* set default font */
+font-family: Arial, sans-serif;
+
+/* apply gradient background */
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+
+/* remove default page margins */
+margin:0;
+
+/* remove default padding */
+padding:0;
+
+/* center text on page */
+text-align:center;
+
+}
+
+/* style for main title */
+h1{
+
+/* text color */
+color:white;
+
+/* spacing around title */
+padding:20px;
+
+}
+
+/* grid container for weather cards */
+#weather-container{
+
+/* create responsive grid layout */
+display:grid;
+
+/* automatically fit cards on screen */
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+/* space between cards */
+gap:20px;
+
+/* padding inside container */
+padding:30px;
+
+}
+
+/* style for individual weather card */
+.card{
+
+/* card background color */
+background:white;
+
+/* rounded corners */
+border-radius:12px;
+
+/* spacing inside card */
+padding:20px;
+
+/* drop shadow effect */
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+
+/* animation when hovering */
+transition:transform 0.2s;
+
+}
+
+/* enlarge card when mouse hovers over it */
+.card:hover{
+
+transform:scale(1.05);
+
+}
+
+/* city name styling */
+.city{
+
+font-size:20px;
+font-weight:bold;
+
+}
+
+/* temperature styling */
+.temp{
+
+font-size:28px;
+margin:10px 0;
+
+}
+
+/* condition text color */
+.condition{
+
+color:#5a5656;
+
+}
