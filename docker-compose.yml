@@ -1,0 +1,61 @@
+# Docker Compose configuration for Weather Aggregator application
+# This file defines a three-service stack: PostgreSQL database, Flask API, and Nginx reverse proxy
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: weather_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  weather_app:
+    build: .
+    container_name: python_app
+    ports:
+      - "5000:5000"
+    networks:
+      - shared_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: weather_db
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    command: python app.py
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - shared_network
+    depends_on:
+      - weather_app
+
+volumes:
+  postgres_data:
+
+networks:
+  shared_network:
+    driver: bridge
+
+    
