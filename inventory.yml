@@ -1,0 +1,48 @@
+# Ansible Inventory for Docker Containers
+# This inventory uses the docker connection plugin to directly interact with running containers
+# No SSH daemon required - communicates natively with the container runtime
+
+all:
+  vars:
+    # Define Docker connection method for all hosts
+    ansible_connection: docker
+
+  children:
+    # Backend services group
+    backend:
+      hosts:
+        weather_app:
+          # Flask/Python application container
+          ansible_host: python_app
+          description: "Flask Weather API Backend"
+          # This container has Python, so Ansible modules work natively
+
+    # Database services group
+    database:
+      hosts:
+        postgres_db:
+          # PostgreSQL database container
+          ansible_host: postgres_db
+          description: "PostgreSQL Weather Database"
+          # Setup shell-only execution (no Python needed)
+          ansible_python_interpreter: /usr/bin/python3
+
+    # Proxy services group
+    proxy:
+      hosts:
+        nginx:
+          # Nginx reverse proxy container
+          ansible_host: nginx_proxy
+          description: "Nginx Reverse Proxy"
+          # Setup shell-only execution (no Python needed)
+          ansible_python_interpreter: /usr/bin/python3
+
+    # Frontend services group
+    frontend:
+      hosts:
+        web_frontend:
+          # Frontend application container
+          ansible_host: frontend_app
+          description: "Frontend Web Application"
+          # Setup shell-only execution (no Python needed)
+          ansible_python_interpreter: /usr/bin/python3
