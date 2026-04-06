@@ -339,6 +339,59 @@ To run this project locally:
    docker-compose down
    ```
 
+## Recent Changes
+
+### Fixed: Root Route 404 Error (April 6, 2026)
+**Issue:** Accessing `http://127.0.0.1:5000/` returned a 404 "Not Found" error.
+
+**Root Cause:** The root route (`@app.route("/")`) was commented out in `app.py`, leaving no handler for requests to the root path.
+
+**Solution:** Uncommented the home route to serve `index.html` at the root path.
+
+**Changed Files:**
+- **[app.py](app.py)** (Lines 90-96)
+  - Uncommented `@app.route("/")` decorator
+  - Uncommented `home()` function that returns `render_template("index.html")`
+
+**Code Change:**
+```python
+# Before:
+# @app.route("/")
+# def home():
+#     return render_template("index.html")
+
+# After:
+@app.route("/")
+def home():
+    return render_template("index.html")
+```
+
+**Result:** Frontend is now accessible at `http://127.0.0.1:5000/` without 404 errors.
+
+### Fixed: Git Push Error (April 6, 2026)
+**Issue:** `git push -u origin weather_aggregator` failed with "src refspec weather_aggregator does not match any".
+
+**Root Cause:** The local `weather_aggregator` branch existed but had no commits, and the remote branch had different commits.
+
+**Solution:** 
+1. Added all project files: `git add .`
+2. Created initial commit: `git commit -m "Initial commit: Weather Aggregator with Flask, PostgreSQL, Docker, and Ansible integration"`
+3. Force pushed to overwrite remote: `git push -u origin weather_aggregator --force`
+
+**Result:** All project files (including Ansible integration) successfully pushed to GitHub.
+
+### Added: Ansible Docker Container Management (April 6, 2026)
+**New Features:**
+- **[ansible.cfg](ansible.cfg)** - Docker-optimized Ansible configuration
+- **[inventory.yml](inventory.yml)** - Container inventory with Docker connection method
+- **[ansible-ping.sh](ansible-ping.sh)** - Automated infrastructure testing script
+
+**Capabilities:**
+- Native Docker connection (no SSH required)
+- Automatic container startup if stopped
+- 10 comprehensive infrastructure tests
+- All containers responding to Ansible commands
+
 ## Submission
 
 All updated code, Dockerfile, docker-compose.yml, nginx.conf, and README.md have been committed and pushed to the repository.
