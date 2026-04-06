@@ -44,6 +44,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Set default startup command for Flask application
 # Runs Flask development server accessible from outside the container
-CMD ["python", "-m", "flask", "run", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["python", "app.py"]
 
 

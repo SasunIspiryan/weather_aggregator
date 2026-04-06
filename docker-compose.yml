@@ -37,7 +37,16 @@ services:
       POSTGRES_DB: weather_db
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
-    command: python app.py
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: frontend_app
+    ports:
+      - "3000:80"
+    networks:
+      - shared_network
 
   nginx:
     image: nginx:alpine
@@ -50,6 +59,7 @@ services:
       - shared_network
     depends_on:
       - weather_app
+      - frontend
 
 volumes:
   postgres_data:

@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
+from flask_cors import CORS
 
 # --------------------------------
 # LOAD ENV VARIABLES
@@ -16,6 +17,8 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 app = Flask(__name__)
+
+CORS(app)
 
 # --------------------------------
 # ENV CONFIG

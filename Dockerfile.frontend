@@ -1,0 +1,14 @@
+# Frontend Dockerfile - serves static files with nginx
+FROM nginx:alpine
+
+# Create static directory
+RUN mkdir -p /usr/share/nginx/html/static
+
+# Copy static files to nginx html directory
+COPY static/ /usr/share/nginx/html/static/
+
+# Expose port 80
+EXPOSE 80
+
+# Default command
+CMD ["nginx", "-g", "daemon off;"]
