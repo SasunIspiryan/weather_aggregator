@@ -516,3 +516,33 @@ If you see "Failed to create temporary directory" error:
 2. Verify `remote_tmp = /tmp/.ansible` setting
 3. Use `raw` module instead of `shell` or `command` modules
 4. Run `docker-compose down && docker-compose up -d` to restart containers
+
+## Cloud Security & Storage
+
+### AWS CLI + S3 Verification
+
+Configured AWS CLI defaults:
+- Region: `eu-north-1`
+- Output: `json`
+
+Created S3 bucket:
+- `my-weather9894-123`
+
+Verification command:
+
+```bash
+aws s3 ls
+```
+
+Expected output includes:
+- `my-weather9894-123`
+
+### Lesson 16 Evidence
+
+Place the following screenshots in:
+- `docs/lesson16/`
+
+Required files:
+- `docs-lesson16 root-muser.png` (IAM Console: root account MFA enabled)
+- `docs-lesson16 admin-user.png` (IAM Console: admin user)
+- `docs-lesson16 my-weather9894-123.png` (Terminal: `aws s3 ls` showing the new bucket)
