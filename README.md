@@ -517,104 +517,33 @@ If you see "Failed to create temporary directory" error:
 3. Use `raw` module instead of `shell` or `command` modules
 4. Run `docker-compose down && docker-compose up -d` to restart containers
 
-_______________________________________________________________________________
 
-Result
+## Cloud Security & Storage
 
-______________________________________________________________________________
+### AWS CLI + S3 Verification
 
-./ansible-ping.sh
-================================
-Weather Aggregator - Ansible Infrastructure Test
-================================
+Configured AWS CLI defaults:
+- Region: `eu-north-1`
+- Output: `json`
 
-[PRE-CHECK] Verifying containers are running...
+Created S3 bucket:
+- `my-weather9894-123`
 
-✓ All containers are running
+Verification command:
 
-[TEST 1] Pinging Flask backend container...
+```bash
+aws s3 ls
+```
 
-weather_app | CHANGED | rc=0 >>
-pong - Docker connection established
+Expected output includes:
+- `my-weather9894-123`
 
+### Lesson 16 Evidence
 
-[TEST 2] Checking Python version on Flask backend...
+Place the following screenshots in:
+- `docs-lesson16`
 
-weather_app | CHANGED | rc=0 >>
-Python 3.11.15
-
-
-[TEST 3] Verifying PostgreSQL database is running...
-
-postgres_db | CHANGED | rc=0 >>
-psql (PostgreSQL) 15.17 (Debian 15.17-1.pgdg13+1)
-
-
-[TEST 4] Checking PostgreSQL connection status...
-
-postgres_db | CHANGED | rc=0 >>
-localhost:5432 - accepting connections
-
-
-[TEST 5] Gathering system info from Flask backend...
-
-weather_app | CHANGED | rc=0 >>
-Linux e8742dd9cbcb 6.17.0-20-generic #20~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 19 01:28:37 UTC 2 x86_64 GNU/Linux
-
-
-[TEST 6] Checking Nginx configuration...
-
-nginx | CHANGED | rc=0 >>
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-
-
-[TEST 7] Checking running services on Flask backend...
-
-weather_app | CHANGED | rc=0 >>
-lrwxrwxrwx 1 root root 0 Apr  6 10:19 /proc/1/exe -> /usr/local/bin/python3.11
-lrwxrwxrwx 1 root root 0 Apr  6 10:19 /proc/7/exe -> /usr/local/bin/python3.11
-
-
-[TEST 8] Checking filesystem usage on PostgreSQL...
-
-postgres_db | CHANGED | rc=0 >>
-Filesystem      Size  Used Avail Use% Mounted on
-overlay         197G   39G  149G  21% /
-tmpfs            64M     0   64M   0% /dev
-shm              64M  1.1M   63M   2% /dev/shm
-/dev/nvme0n1p6  197G   39G  149G  21% /etc/hosts
-tmpfs           7.8G     0  7.8G   0% /proc/asound
-tmpfs           7.8G     0  7.8G   0% /proc/acpi
-tmpfs           7.8G     0  7.8G   0% /proc/scsi
-tmpfs           7.8G     0  7.8G   0% /sys/firmware
-tmpfs           7.8G     0  7.8G   0% /sys/devices/virtual/powercap
-tmpfs           7.8G     0  7.8G   0% /sys/devices/system/cpu/cpu0/thermal_throttle
-
-
-[TEST 9] Checking frontend container status...
-
-web_frontend | CHANGED | rc=0 >>
-total 28
-drwxr-xr-x    1 root     root          4096 Apr  3 15:01 .
-drwxr-xr-x    1 root     root          4096 Mar 24 22:12 ..
--rw-r--r--    1 root     root           497 Mar 24 17:22 50x.html
--rw-r--r--    1 root     root           896 Mar 24 17:22 index.html
-drwxr-xr-x    1 root     root          4096 Apr  3 14:59 static
-
-
-[TEST 10] Checking backend Flask service port...
-
-weather_app | CHANGED | rc=0 >>
-Port status check (netstat requires net-tools)
-
-
-
-================================
-All tests completed!
-================================
-
-✓ Ansible is successfully communicating with all Docker containers
-✓ Using native Docker connection plugin (no SSH daemon required)
-✓ Backend container: raw Python modules work
-✓ Other containers: using raw/shell modules for direct command execution
+Required files:
+- `docs-lesson16/ root_user.png` (IAM Console: root account MFA enabled)
+- `docs-lesson16/ admin-user.png` (IAM Console: admin user)
+- `docs-lesson16/ my-weather9894-123.png` (Terminal: `aws s3 ls` showing the new bucket)
