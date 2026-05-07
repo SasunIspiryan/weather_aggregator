@@ -1,333 +1,116 @@
-terraform {
-  required_version = ">= 1.10.0"
+module "networking" {
+  source = "./modules/networking"
 
-  backend "s3" {
-    bucket       = "project-weather-tf-state-930458520014-74713"
-    key          = "project/terraform.tfstate"
-    region       = "us-east-1"
-    use_lockfile = true
-  }
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  environment          = var.environment
+  availability_zones   = var.availability_zones
 }
 
-provider "aws" {
-  region = "us-east-1"
+module "compute" {
+  source = "./modules/compute"
+
+  vpc_id           = module.networking.vpc_id
+  subnet_ids       = module.networking.public_subnet_ids
+  environment      = var.environment
+  instance_type    = var.instance_type
+  min_size         = var.min_size
+  max_size         = var.max_size
+  desired_capacity = var.desired_capacity
+  repo_url         = var.repo_url
+  rds_endpoint     = var.rds_endpoint
+  db_name          = var.db_name
+  db_username      = var.db_username
+  db_password      = var.db_password
 }
 
-data "aws_ssm_parameter" "amazon_linux_2023_ami" {
-  name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+moved {
+  from = aws_vpc.main
+  to   = module.networking.aws_vpc.main
 }
 
-variable "repo_url" {
-  description = "Git repository URL for application bootstrap"
-  type        = string
-  default     = "https://github.com/SasunIspiryan/weather_aggregator.git"
+moved {
+  from = aws_subnet.public
+  to   = module.networking.aws_subnet.public[0]
 }
 
-variable "rds_endpoint" {
-  description = "RDS endpoint hostname used by the weather application"
-  type        = string
-  default     = ""
+moved {
+  from = aws_subnet.public_secondary
+  to   = module.networking.aws_subnet.public[1]
 }
 
-variable "db_name" {
-  description = "Database name for the weather application"
-  type        = string
-  default     = "weather_db"
+moved {
+  from = aws_subnet.private
+  to   = module.networking.aws_subnet.private[0]
 }
 
-variable "db_username" {
-  description = "Database username for the weather application"
-  type        = string
-  default     = "postgres"
+moved {
+  from = aws_internet_gateway.main
+  to   = module.networking.aws_internet_gateway.main
 }
 
-variable "db_password" {
-  description = "Database password for the weather application"
-  type        = string
-  sensitive   = true
-  default     = "postgres"
+moved {
+  from = aws_route_table.public
+  to   = module.networking.aws_route_table.public
 }
 
-resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "main-vpc"
-  }
+moved {
+  from = aws_route_table.private
+  to   = module.networking.aws_route_table.private
 }
 
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "public-subnet"
-  }
+moved {
+  from = aws_route_table_association.public
+  to   = module.networking.aws_route_table_association.public[0]
 }
 
-resource "aws_subnet" "public_secondary" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.3.0/24"
-  availability_zone       = "us-east-1b"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "public-subnet-2"
-  }
+moved {
+  from = aws_route_table_association.public_secondary
+  to   = module.networking.aws_route_table_association.public[1]
 }
 
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
-
-  tags = {
-    Name = "private-subnet"
-  }
+moved {
+  from = aws_route_table_association.private
+  to   = module.networking.aws_route_table_association.private[0]
 }
 
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "main-igw"
-  }
+moved {
+  from = aws_security_group.alb
+  to   = module.compute.aws_security_group.alb
 }
 
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  tags = {
-    Name = "public-rt"
-  }
+moved {
+  from = aws_security_group.app
+  to   = module.compute.aws_security_group.app
 }
 
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "private-rt"
-  }
+moved {
+  from = aws_lb.main
+  to   = module.compute.aws_lb.main
 }
 
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
+moved {
+  from = aws_lb_target_group.app
+  to   = module.compute.aws_lb_target_group.app
 }
 
-resource "aws_route_table_association" "public_secondary" {
-  subnet_id      = aws_subnet.public_secondary.id
-  route_table_id = aws_route_table.public.id
+moved {
+  from = aws_lb_listener.http
+  to   = module.compute.aws_lb_listener.http
 }
 
-resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
+moved {
+  from = aws_launch_template.app
+  to   = module.compute.aws_launch_template.app
 }
 
-resource "aws_security_group" "alb" {
-  name        = "alb-sg"
-  description = "Allow HTTP inbound traffic to the ALB"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "alb-sg"
-  }
+moved {
+  from = aws_autoscaling_group.app
+  to   = module.compute.aws_autoscaling_group.app
 }
 
-resource "aws_security_group" "app" {
-  name        = "app-sg"
-  description = "Allow traffic from the ALB to application instances"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "HTTP from ALB"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "app-sg"
-  }
-}
-
-resource "aws_lb" "main" {
-  name               = "weather-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = [aws_subnet.public.id, aws_subnet.public_secondary.id]
-
-  tags = {
-    Name = "weather-alb"
-  }
-}
-
-resource "aws_lb_target_group" "app" {
-  name        = "weather-tg"
-  port        = 80
-  protocol    = "HTTP"
-  target_type = "instance"
-  vpc_id      = aws_vpc.main.id
-
-  health_check {
-    enabled             = true
-    path                = "/"
-    protocol            = "HTTP"
-    matcher             = "200"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    interval            = 30
-    timeout             = 5
-  }
-
-  tags = {
-    Name = "weather-tg"
-  }
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
-}
-
-resource "aws_launch_template" "app" {
-  name_prefix   = "weather-app-"
-  image_id      = data.aws_ssm_parameter.amazon_linux_2023_ami.value
-  instance_type = "t3.micro"
-
-  vpc_security_group_ids = [aws_security_group.app.id]
-
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    set -euxo pipefail
-
-    yum update -y
-    yum install -y docker git
-    systemctl enable --now docker
-    usermod -aG docker ec2-user
-
-    mkdir -p /usr/local/lib/docker/cli-plugins
-    curl -SL https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
-    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-
-    APP_DIR="/opt/weather_aggregator"
-    if [ ! -d "$APP_DIR" ]; then
-      git clone "${var.repo_url}" "$APP_DIR"
-    fi
-
-    cd "$APP_DIR"
-
-    cat > .env <<ENVVARS
-    APP_ENV=production
-    APP_VERSION=1.0.0
-    POSTGRES_HOST=${var.rds_endpoint}
-    POSTGRES_PORT=5432
-    POSTGRES_DB=${var.db_name}
-    POSTGRES_USER=${var.db_username}
-    POSTGRES_PASSWORD=${var.db_password}
-    ENVVARS
-
-    sed -i 's/"8080:80"/"80:80"/' docker-compose.yml
-    sed -i 's/POSTGRES_USER: postgres/POSTGRES_USER: $${POSTGRES_USER}/' docker-compose.yml
-    sed -i 's/POSTGRES_PASSWORD: postgres/POSTGRES_PASSWORD: $${POSTGRES_PASSWORD}/' docker-compose.yml
-    sed -i 's/POSTGRES_DB: weather_db/POSTGRES_DB: $${POSTGRES_DB}/' docker-compose.yml
-    sed -i 's/POSTGRES_HOST: postgres/POSTGRES_HOST: $${POSTGRES_HOST}/' docker-compose.yml
-
-    docker compose up -d
-    EOF
-  )
-
-  tag_specifications {
-    resource_type = "instance"
-
-    tags = {
-      Name = "weather-app-instance"
-    }
-  }
-}
-
-resource "aws_autoscaling_group" "app" {
-  name                = "weather-asg"
-  min_size            = 2
-  max_size            = 4
-  desired_capacity    = 2
-  vpc_zone_identifier = [aws_subnet.public.id, aws_subnet.public_secondary.id]
-  target_group_arns   = [aws_lb_target_group.app.arn]
-  health_check_type   = "ELB"
-
-  launch_template {
-    id      = aws_launch_template.app.id
-    version = "$Latest"
-  }
-
-  tag {
-    key                 = "Name"
-    value               = "weather-app-instance"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_policy" "cpu_target_tracking" {
-  name                   = "weather-cpu-target-tracking"
-  autoscaling_group_name = aws_autoscaling_group.app.name
-  policy_type            = "TargetTrackingScaling"
-
-  target_tracking_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ASGAverageCPUUtilization"
-    }
-
-    target_value = 50.0
-  }
-}
-
-output "alb_dns_name" {
-  description = "DNS name of the application load balancer"
-  value       = aws_lb.main.dns_name
+moved {
+  from = aws_autoscaling_policy.cpu_target_tracking
+  to   = module.compute.aws_autoscaling_policy.cpu_target_tracking
 }
