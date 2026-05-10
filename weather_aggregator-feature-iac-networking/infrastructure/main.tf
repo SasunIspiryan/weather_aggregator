@@ -8,21 +8,43 @@ module "networking" {
   availability_zones   = var.availability_zones
 }
 
+resource "aws_ssm_parameter" "db_username" {
+  name  = "/project-weather/db-username"
+  type  = "String"
+  value = var.db_username
+
+  tags = {
+    Name = "project-weather-db-username"
+  }
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/project-weather/db-password"
+  type  = "SecureString"
+  value = var.db_password
+
+  tags = {
+    Name = "project-weather-db-password"
+  }
+}
+
 module "compute" {
   source = "./modules/compute"
 
-  vpc_id           = module.networking.vpc_id
-  subnet_ids       = module.networking.public_subnet_ids
-  environment      = var.environment
-  instance_type    = var.instance_type
-  min_size         = var.min_size
-  max_size         = var.max_size
-  desired_capacity = var.desired_capacity
-  repo_url         = var.repo_url
-  rds_endpoint     = var.rds_endpoint
-  db_name          = var.db_name
-  db_username      = var.db_username
-  db_password      = var.db_password
+  vpc_id                         = module.networking.vpc_id
+  subnet_ids                     = module.networking.public_subnet_ids
+  environment                    = var.environment
+  instance_type                  = var.instance_type
+  min_size                       = var.min_size
+  max_size                       = var.max_size
+  desired_capacity               = var.desired_capacity
+  repo_url                       = var.repo_url
+  rds_endpoint                   = var.rds_endpoint
+  db_name                        = var.db_name
+  db_username                    = var.db_username
+  db_password                    = var.db_password
+  db_username_ssm_parameter_name = aws_ssm_parameter.db_username.name
+  db_password_ssm_parameter_name = aws_ssm_parameter.db_password.name
 }
 
 moved {

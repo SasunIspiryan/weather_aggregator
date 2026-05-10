@@ -11,6 +11,9 @@
 # Terraform variable definitions (may contain secrets)
 *.tfvars
 *.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
 
 # Terraform override files
 override.tf

@@ -73,12 +73,10 @@ variable "db_name" {
 variable "db_username" {
   description = "Database username for the weather application"
   type        = string
-  default     = "postgres"
 }
 
 variable "db_password" {
   description = "Database password for the weather application"
   type        = string
   sensitive   = true
-  default     = "postgres"
 }

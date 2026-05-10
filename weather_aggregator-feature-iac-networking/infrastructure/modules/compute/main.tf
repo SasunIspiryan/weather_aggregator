@@ -2,6 +2,48 @@ data "aws_ssm_parameter" "amazon_linux_2023_ami" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "app" {
+  name = "weather-app-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "app_ssm_read" {
+  name = "weather-app-ssm-read"
+  role = aws_iam_role.app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ssm:GetParameter"]
+        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/project-weather/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "app" {
+  name = "weather-app-ec2-profile"
+  role = aws_iam_role.app.name
+}
+
 resource "aws_security_group" "alb" {
   name        = "alb-sg"
   description = "Allow HTTP inbound traffic to the ALB"
@@ -109,12 +151,16 @@ resource "aws_launch_template" "app" {
 
   vpc_security_group_ids = [aws_security_group.app.id]
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.app.name
+  }
+
   user_data = base64encode(<<-EOF
     #!/bin/bash
     set -euxo pipefail
 
     yum update -y
-    yum install -y docker git
+    yum install -y docker git awscli
     systemctl enable --now docker
     usermod -aG docker ec2-user
 
@@ -129,14 +175,17 @@ resource "aws_launch_template" "app" {
 
     cd "$APP_DIR"
 
+  DB_USERNAME=$(aws ssm get-parameter --name "${var.db_username_ssm_parameter_name}" --query Parameter.Value --output text)
+  DB_PASSWORD=$(aws ssm get-parameter --name "${var.db_password_ssm_parameter_name}" --with-decryption --query Parameter.Value --output text)
+
     cat > .env <<ENVVARS
     APP_ENV=production
     APP_VERSION=1.0.0
     POSTGRES_HOST=${var.rds_endpoint}
     POSTGRES_PORT=5432
     POSTGRES_DB=${var.db_name}
-    POSTGRES_USER=${var.db_username}
-    POSTGRES_PASSWORD=${var.db_password}
+  POSTGRES_USER=$${DB_USERNAME}
+  POSTGRES_PASSWORD=$${DB_PASSWORD}
     ENVVARS
 
     sed -i 's/"8080:80"/"80:80"/' docker-compose.yml

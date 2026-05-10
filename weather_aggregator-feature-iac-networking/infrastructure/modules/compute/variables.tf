@@ -62,3 +62,13 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "db_username_ssm_parameter_name" {
+  description = "SSM parameter name that stores the DB username"
+  type        = string
+}
+
+variable "db_password_ssm_parameter_name" {
+  description = "SSM parameter name that stores the DB password"
+  type        = string
+}
