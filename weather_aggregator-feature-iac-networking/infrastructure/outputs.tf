@@ -1,9 +1,13 @@
 output "alb_dns_name" {
+  # Human-readable description of exported ALB DNS value.
   description = "DNS name of the application load balancer"
-  value       = module.compute.alb_dns_name
+  # Expose ALB DNS from compute module output.
+  value = module.compute.alb_dns_name
 }
 
 output "vpc_id" {
+  # Human-readable description of exported VPC ID value.
   description = "VPC ID from the networking module"
-  value       = module.networking.vpc_id
+  # Expose VPC ID from networking module output.
+  value = module.networking.vpc_id
 }
