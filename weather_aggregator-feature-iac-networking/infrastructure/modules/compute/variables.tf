@@ -42,6 +42,11 @@ variable "repo_url" {
   type        = string
 }
 
+variable "golden_ami_id" {
+  description = "Golden AMI ID that already contains Docker, Git, AWS CLI, and jq"
+  type        = string
+}
+
 variable "rds_endpoint" {
   description = "RDS endpoint hostname used by the weather application"
   type        = string
@@ -50,17 +55,6 @@ variable "rds_endpoint" {
 variable "db_name" {
   description = "Database name for the weather application"
   type        = string
-}
-
-variable "db_username" {
-  description = "Database username for the weather application"
-  type        = string
-}
-
-variable "db_password" {
-  description = "Database password for the weather application"
-  type        = string
-  sensitive   = true
 }
 
 variable "iam_instance_profile" {

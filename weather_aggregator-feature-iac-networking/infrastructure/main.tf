@@ -11,19 +11,18 @@ module "networking" {
 module "compute" {
   source = "./modules/compute"
 
-  vpc_id                 = module.networking.vpc_id
-  subnet_ids             = module.networking.public_subnet_ids
-  environment            = var.environment
-  instance_type          = var.instance_type
-  min_size               = var.min_size
-  max_size               = var.max_size
-  desired_capacity       = var.desired_capacity
-  repo_url               = var.repo_url
-  rds_endpoint           = var.rds_endpoint
-  db_name                = var.db_name
-  db_username            = var.db_username
-  db_password            = var.db_password
-  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+  vpc_id               = module.networking.vpc_id
+  subnet_ids           = module.networking.public_subnet_ids
+  environment          = var.environment
+  instance_type        = var.instance_type
+  min_size             = var.min_size
+  max_size             = var.max_size
+  desired_capacity     = var.desired_capacity
+  repo_url             = var.repo_url
+  golden_ami_id        = var.golden_ami_id
+  rds_endpoint         = var.rds_endpoint
+  db_name              = var.db_name
+  iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
 }
 
 moved {
