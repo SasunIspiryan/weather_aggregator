@@ -58,6 +58,11 @@ variable "repo_url" {
   default     = "https://github.com/SasunIspiryan/weather_aggregator.git"
 }
 
+variable "golden_ami_id" {
+  description = "Golden AMI ID with Docker, Git, AWS CLI, and jq preinstalled"
+  type        = string
+}
+
 variable "rds_endpoint" {
   description = "RDS endpoint hostname used by the weather application"
   type        = string
