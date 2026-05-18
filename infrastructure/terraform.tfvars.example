@@ -1,0 +1,9 @@
+# Copy this file to terraform.tfvars and set a strong password.
+# Do not commit terraform.tfvars.
+
+db_password = "REPLACE_WITH_STRONG_PASSWORD"
+# Optional overrides:
+# db_username = "postgres"
+# db_name     = "weather_db"
+# repo_url    = "https://github.com/SasunIspiryan/weather_aggregator.git"
+# app_instance_type = "t3.micro"
