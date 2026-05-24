@@ -1,16 +1,28 @@
-terraform {
-  required_version = ">= 1.5.0"
+module "networking" {
+  source = "./modules/networking"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  environment          = var.environment
+  availability_zones   = var.availability_zones
 }
 
-provider "aws" {
-  region = "us-east-1"
+module "compute" {
+  source = "./modules/compute"
+
+  vpc_id           = module.networking.vpc_id
+  subnet_ids       = module.networking.public_subnet_ids
+  environment      = var.environment
+  instance_type    = var.instance_type
+  min_size         = var.min_size
+  max_size         = var.max_size
+  desired_capacity = var.desired_capacity
+  repo_url         = var.repo_url
+  rds_endpoint     = var.rds_endpoint
+  db_name          = var.db_name
+  db_username      = var.db_username
+  db_password      = var.db_password
 }
 
 variable "db_username" {
@@ -67,25 +79,14 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "public-subnet"
-  }
+moved {
+  from = aws_subnet.public
+  to   = module.networking.aws_subnet.public[0]
 }
 
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
-
-  tags = {
-    Name = "private-subnet"
-  }
+moved {
+  from = aws_subnet.public_secondary
+  to   = module.networking.aws_subnet.public[1]
 }
 
 resource "aws_subnet" "private_2" {
@@ -106,30 +107,14 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  tags = {
-    Name = "public-rt"
-  }
+moved {
+  from = aws_route_table.public
+  to   = module.networking.aws_route_table.public
 }
 
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "private-rt"
-  }
-}
-
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
+moved {
+  from = aws_route_table.private
+  to   = module.networking.aws_route_table.private
 }
 
 resource "aws_route_table_association" "private" {
@@ -140,6 +125,16 @@ resource "aws_route_table_association" "private" {
 resource "aws_route_table_association" "private_2" {
   subnet_id      = aws_subnet.private_2.id
   route_table_id = aws_route_table.private.id
+}
+
+moved {
+  from = aws_route_table_association.public
+  to   = module.networking.aws_route_table_association.public[0]
+}
+
+moved {
+  from = aws_route_table_association.public_secondary
+  to   = module.networking.aws_route_table_association.public[1]
 }
 
 resource "aws_security_group" "app_sg" {
@@ -198,6 +193,46 @@ resource "aws_security_group" "db_sg" {
   tags = {
     Name = "db-sg"
   }
+}
+
+moved {
+  from = aws_security_group.alb
+  to   = module.compute.aws_security_group.alb
+}
+
+moved {
+  from = aws_security_group.app
+  to   = module.compute.aws_security_group.app
+}
+
+moved {
+  from = aws_lb.main
+  to   = module.compute.aws_lb.main
+}
+
+moved {
+  from = aws_lb_target_group.app
+  to   = module.compute.aws_lb_target_group.app
+}
+
+moved {
+  from = aws_lb_listener.http
+  to   = module.compute.aws_lb_listener.http
+}
+
+moved {
+  from = aws_launch_template.app
+  to   = module.compute.aws_launch_template.app
+}
+
+moved {
+  from = aws_autoscaling_group.app
+  to   = module.compute.aws_autoscaling_group.app
+}
+
+moved {
+  from = aws_autoscaling_policy.cpu_target_tracking
+  to   = module.compute.aws_autoscaling_policy.cpu_target_tracking
 }
 
 resource "aws_db_subnet_group" "weather_db_subnets" {
