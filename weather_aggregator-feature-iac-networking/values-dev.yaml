@@ -1,0 +1,18 @@
+replicaCount: 2
+image:
+  repository: weather-backend
+  tag: hw26
+  pullPolicy: IfNotPresent
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+ingress:
+  enabled: true
+  host: weather.local
+config:
+  dbHost: "postgres-service"
+  appEnv: "development"
+  logLevel: "debug"
+db:
+  secretName: weather-db-creds
