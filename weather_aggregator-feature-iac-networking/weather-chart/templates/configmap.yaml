@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+data:
+  DB_HOST: "{{ .Values.config.dbHost }}"
+  APP_PORT: "{{ .Values.service.port }}"
+  APP_ENV: "{{ .Values.config.appEnv }}"
+  LOG_LEVEL: "{{ .Values.config.logLevel }}"
