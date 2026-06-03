@@ -7,6 +7,12 @@ on:
 jobs:
   build-and-push:
     runs-on: self-hosted
+    env:
+      IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/weather
+      IMAGE_TAG: ${{ github.sha }}
+      ECR_REGION: us-east-1
+      ECR_REGISTRY: 930458520014.dkr.ecr.us-east-1.amazonaws.com
+      ECR_REPOSITORY: weather
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,18 +23,33 @@ jobs:
           docker --version
           kubectl version --client
           helm version
+          aws --version
 
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build Docker image
-        run: docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}" .
+        run: docker build -t "$IMAGE_REPO:$IMAGE_TAG" .
 
-      - name: Push Docker image
+      - name: Push Docker image to DockerHub
         run: |
-          docker push "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}"
-          docker tag "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}" "${{ secrets.DOCKERHUB_USERNAME }}/weather:latest"
-          docker push "${{ secrets.DOCKERHUB_USERNAME }}/weather:latest"
+          docker push "$IMAGE_REPO:$IMAGE_TAG"
+          docker tag "$IMAGE_REPO:$IMAGE_TAG" "$IMAGE_REPO:latest"
+          docker push "$IMAGE_REPO:latest"
+
+      - name: Login to AWS ECR
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws ecr get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Push Docker image to AWS ECR
+        run: |
+          docker tag "$IMAGE_REPO:$IMAGE_TAG" "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
       - name: Deploy to Minikube
         run: |
@@ -39,13 +60,13 @@ jobs:
           eval $(minikube docker-env)
           
           # Build the image in Minikube
-          docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}" .
+          docker build -t "$IMAGE_REPO:$IMAGE_TAG" .
           
           # Update Helm values with the new image tag
           cat > /tmp/minikube-values.yaml <<EOF
           image:
-            repository: ${{ secrets.DOCKERHUB_USERNAME }}/weather
-            tag: "${{ github.sha }}"
+            repository: $IMAGE_REPO
+            tag: "$IMAGE_TAG"
             pullPolicy: Never
           EOF
           
