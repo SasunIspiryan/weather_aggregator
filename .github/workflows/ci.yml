@@ -57,10 +57,10 @@ jobs:
             --create-namespace
           
           # Wait for deployment to be ready
-          kubectl rollout status deployment/weather -n default --timeout=2m
+          kubectl rollout status deployment/weather-deployment -n default --timeout=2m
           
           # Verify the deployment
           echo "Deployment status:"
-          kubectl get pods -n default -l app=weather
+          kubectl get pods -n default -l app=weather-chart
           echo "Service status:"
           kubectl get svc -n default
