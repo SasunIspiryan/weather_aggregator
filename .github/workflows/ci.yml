@@ -29,3 +29,38 @@ jobs:
           docker push "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}"
           docker tag "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}" "${{ secrets.DOCKERHUB_USERNAME }}/weather:latest"
           docker push "${{ secrets.DOCKERHUB_USERNAME }}/weather:latest"
+
+      - name: Deploy to Minikube
+        run: |
+          # Ensure Minikube is running
+          minikube status || minikube start
+          
+          # Point Docker to Minikube's Docker daemon to use local images
+          eval $(minikube docker-env)
+          
+          # Build the image in Minikube
+          docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/weather:${{ github.sha }}" .
+          
+          # Update Helm values with the new image tag
+          cat > /tmp/minikube-values.yaml <<EOF
+          image:
+            repository: ${{ secrets.DOCKERHUB_USERNAME }}/weather
+            tag: "${{ github.sha }}"
+            pullPolicy: Never
+          EOF
+          
+          # Deploy to Minikube using Helm
+          helm upgrade --install weather ./weather-chart \
+            -f weather-chart/values.yaml \
+            -f /tmp/minikube-values.yaml \
+            --namespace default \
+            --create-namespace
+          
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/weather -n default --timeout=2m
+          
+          # Verify the deployment
+          echo "Deployment status:"
+          kubectl get pods -n default -l app=weather
+          echo "Service status:"
+          kubectl get svc -n default
