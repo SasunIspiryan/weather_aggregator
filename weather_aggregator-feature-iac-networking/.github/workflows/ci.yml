@@ -19,10 +19,10 @@ jobs:
           helm version --client || true
 
       - name: Log in to Amazon ECR
-        if: ${{ secrets.ECR_REGISTRY != '' }}
+        if: "${{ secrets.ECR_REGISTRY != '' }}"
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          region: ${{ secrets.AWS_REGION }}
+          region: "${{ secrets.AWS_REGION }}"
 
       - name: Build Docker image
         run: |
@@ -32,10 +32,10 @@ jobs:
           fi
 
       - name: Push to ECR
-        if: ${{ secrets.ECR_REGISTRY != '' }}
+        if: "${{ secrets.ECR_REGISTRY != '' }}"
         run: |
           docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
 
       - name: Skip push (no registry configured)
-        if: ${{ secrets.ECR_REGISTRY == '' }}
+        if: "${{ secrets.ECR_REGISTRY == '' }}"
         run: echo "No ECR_REGISTRY secret set; skipping push. Configure secrets to enable push."
