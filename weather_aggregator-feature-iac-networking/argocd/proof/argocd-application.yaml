@@ -1,0 +1,197 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"weather","namespace":"argocd"},"spec":{"destination":{"namespace":"weather","server":"https://kubernetes.default.svc"},"project":"default","source":{"helm":{"values":"replicaCount: 4\nimage:\n  repository: sasunispiryan/weather_aggregator\n  tag: latest\n"},"path":"weather-chart","repoURL":"https://github.com/SasunIspiryan/weather_aggregator.git","targetRevision":"hw32"},"syncPolicy":{"automated":{"prune":true,"selfHeal":true},"syncOptions":["CreateNamespace=true"]}}}
+  creationTimestamp: "2026-06-11T10:17:30Z"
+  generation: 52
+  name: weather
+  namespace: argocd
+  resourceVersion: "63110"
+  uid: c57fe6d1-936b-4c18-b405-a01a6b9946fa
+spec:
+  destination:
+    namespace: weather
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      values: |
+        replicaCount: 4
+        image:
+          repository: sasunispiryan/weather_aggregator
+          tag: latest
+    path: weather-chart
+    repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
+    targetRevision: hw32
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+status:
+  controllerNamespace: argocd
+  health:
+    status: Healthy
+  history:
+  - deployStartedAt: "2026-06-11T10:31:13Z"
+    deployedAt: "2026-06-11T10:31:14Z"
+    id: 0
+    revision: acf58291f7d2f4bcee5672cf2638991452162bc4
+    source:
+      helm:
+        values: |
+          replicaCount: 2
+          image:
+            repository: sasunispiryan/weather_aggregator
+            tag: latest
+      path: weather-chart
+      repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
+      targetRevision: hw32
+  - deployStartedAt: "2026-06-11T10:34:20Z"
+    deployedAt: "2026-06-11T10:34:20Z"
+    id: 1
+    revision: f15371be3812a66bd283e6c2355d254bc74f2740
+    source:
+      helm:
+        values: |
+          replicaCount: 4
+          image:
+            repository: sasunispiryan/weather_aggregator
+            tag: latest
+      path: weather-chart
+      repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
+      targetRevision: hw32
+  operationState:
+    finishedAt: "2026-06-11T10:34:20Z"
+    message: successfully synced (all tasks run)
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        prune: true
+        revision: f15371be3812a66bd283e6c2355d254bc74f2740
+        syncOptions:
+        - CreateNamespace=true
+    phase: Succeeded
+    startedAt: "2026-06-11T10:34:20Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Running
+        kind: Secret
+        message: secret/weather-db-creds unchanged
+        name: weather-db-creds
+        namespace: weather
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: ""
+        hookPhase: Running
+        kind: ConfigMap
+        message: configmap/weather-config unchanged
+        name: weather-config
+        namespace: weather
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: ""
+        hookPhase: Running
+        kind: Service
+        message: service/weather-service unchanged
+        name: weather-service
+        namespace: weather
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: apps
+        hookPhase: Running
+        kind: Deployment
+        message: deployment.apps/weather-deployment configured
+        name: weather-deployment
+        namespace: weather
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: networking.k8s.io
+        hookPhase: Running
+        kind: Ingress
+        message: ingress.networking.k8s.io/weather-ingress unchanged
+        name: weather-ingress
+        namespace: weather
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      revision: f15371be3812a66bd283e6c2355d254bc74f2740
+      source:
+        helm:
+          values: |
+            replicaCount: 4
+            image:
+              repository: sasunispiryan/weather_aggregator
+              tag: latest
+        path: weather-chart
+        repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
+        targetRevision: hw32
+  reconciledAt: "2026-06-11T11:21:33Z"
+  resources:
+  - kind: ConfigMap
+    name: weather-config
+    namespace: weather
+    status: Synced
+    version: v1
+  - kind: Secret
+    name: weather-db-creds
+    namespace: weather
+    status: Synced
+    version: v1
+  - health:
+      status: Healthy
+    kind: Service
+    name: weather-service
+    namespace: weather
+    status: Synced
+    version: v1
+  - group: apps
+    health:
+      status: Healthy
+    kind: Deployment
+    name: weather-deployment
+    namespace: weather
+    status: Synced
+    version: v1
+  - group: networking.k8s.io
+    health:
+      status: Healthy
+    kind: Ingress
+    name: weather-ingress
+    namespace: weather
+    status: Synced
+    version: v1
+  sourceType: Helm
+  summary:
+    externalURLs:
+    - http://genesis.local/
+    images:
+    - sasunispiryan/weather_aggregator:latest
+  sync:
+    comparedTo:
+      destination:
+        namespace: weather
+        server: https://kubernetes.default.svc
+      source:
+        helm:
+          values: |
+            replicaCount: 4
+            image:
+              repository: sasunispiryan/weather_aggregator
+              tag: latest
+        path: weather-chart
+        repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
+        targetRevision: hw32
+    revision: f15371be3812a66bd283e6c2355d254bc74f2740
+    status: Synced

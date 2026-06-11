@@ -1,0 +1,5 @@
+NAME                                 READY   STATUS    RESTARTS   AGE   IP             NODE       NOMINATED NODE   READINESS GATES
+weather-deployment-cbdd5c7d6-7zdzm   1/1     Running   0          49m   10.244.0.120   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-9t7xk   1/1     Running   0          49m   10.244.0.121   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-cp6g6   1/1     Running   0          52m   10.244.0.115   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-rkw9x   1/1     Running   0          52m   10.244.0.116   minikube   <none>           <none>
