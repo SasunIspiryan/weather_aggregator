@@ -1,5 +1,0 @@
-# Scale test: manual drift -> ArgoCD healing
-Thu 11 Jun 2026 03:24:13 PM +04
-deployment.apps/weather-deployment scaled
-trial 1 replicas=10
-trial 2 replicas=4
