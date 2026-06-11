@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
-    targetRevision: 2e464a5e395fea5520cbfb12ded36856247275fe
+    targetRevision: hw32
     path: weather-chart
     helm:
       values: |
