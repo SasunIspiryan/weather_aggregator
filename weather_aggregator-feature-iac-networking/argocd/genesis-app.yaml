@@ -7,13 +7,13 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SasunIspiryan/weather_aggregator.git
-    targetRevision: main
-    path: weather-chart
+    targetRevision: hw32
+    path: weather_aggregator-feature-iac-networking/weather-chart
     helm:
       values: |
         replicaCount: 2
         image:
-          repository: SasunIspiryan/weather_aggregator
+          repository: sasunispiryan/weather_aggregator
           tag: latest
   destination:
     server: https://kubernetes.default.svc

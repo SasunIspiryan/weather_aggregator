@@ -1,6 +1,6 @@
 replicaCount: 2
 image:
-  repository: SasunIspiryan/weather_aggregator
+  repository: sasunispiryan/weather_aggregator
   tag: "latest"
   pullPolicy: IfNotPresent
 service:
