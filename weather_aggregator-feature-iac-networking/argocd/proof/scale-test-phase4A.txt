@@ -1,0 +1,12 @@
+# Phase 4A - scale test (manual drift -> ArgoCD healing)
+Thu 11 Jun 2026 03:33:46 PM +04
+deployment.apps/weather-deployment scaled
+trial 1 replicas=7 sync=OutOfSync
+trial 2 replicas=2 sync=Synced
+NAME                 READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                    SELECTOR
+weather-deployment   2/2     2            2           84m   weather      sasunispiryan/weather_aggregator:latest   app=weather-chart
+NAME                                 READY   STATUS        RESTARTS   AGE   IP             NODE       NOMINATED NODE   READINESS GATES
+weather-deployment-cbdd5c7d6-7zdzm   1/1     Terminating   0          59m   10.244.0.120   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-9t7xk   1/1     Running       0          59m   10.244.0.121   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-cp6g6   1/1     Terminating   0          62m   10.244.0.115   minikube   <none>           <none>
+weather-deployment-cbdd5c7d6-rkw9x   1/1     Running       0          62m   10.244.0.116   minikube   <none>           <none>
