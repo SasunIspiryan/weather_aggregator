@@ -11,7 +11,7 @@ spec:
     path: weather-chart
     helm:
       values: |
-        replicaCount: 2
+        replicaCount: 4
         image:
           repository: sasunispiryan/weather_aggregator
           tag: latest
