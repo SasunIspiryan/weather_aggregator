@@ -1,0 +1,56 @@
+# Terraform working directories
+.terraform/
+**/.terraform/*
+
+# Terraform state files
+.tfstate
+.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Terraform variable definitions (may contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Kubernetes/kubeconfig files
+kubeconfig
+.kubeconfig
+kubeconfig-*
+~/.kube/config
+
+# Python & development
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore

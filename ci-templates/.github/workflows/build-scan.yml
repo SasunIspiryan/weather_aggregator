@@ -1,0 +1,109 @@
+name: Build and Scan (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Full image reference to build/push/scan (e.g. <acct>.dkr.ecr.<region>.amazonaws.com/weather:<tag>)
+        required: true
+        type: string
+      helm_release:
+        description: Helm release name
+        required: true
+        type: string
+      helm_namespace:
+        description: Helm namespace
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+
+      KUBECONFIG:
+        description: Kubeconfig content (raw). If set, deploy uses it.
+        required: false
+      EKS_CLUSTER_NAME:
+        description: If set (and KUBECONFIG is not provided), deploy updates kubeconfig via aws eks.
+        required: false
+      GITHUB_TOKEN_WRITE:
+        description: Token with write permissions for committing values-prod.yaml (optional)
+        required: false
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to AWS ECR
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry_host="$(echo '${{ inputs.image }}' | cut -d/ -f1)"
+          region="${{ secrets.AWS_REGION }}"
+          echo "Logging into ECR registry ${registry_host} (region=${region})"
+          aws ecr get-login-password --region "${region}" | docker login "${registry_host}" -u AWS --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t "${{ inputs.image }}" .
+          docker push "${{ inputs.image }}"
+
+  scan:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@0.25.0
+        with:
+          image-ref: ${{ inputs.image }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          scanners: vuln
+
+  deploy:
+    needs: scan
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        shell: bash
+        env:
+          KUBECONFIG_SECRET: ${{ secrets.KUBECONFIG }}
+          EKS_CLUSTER_NAME_SECRET: ${{ secrets.EKS_CLUSTER_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KUBECONFIG_SECRET}" ]; then
+            echo "Using provided KUBECONFIG secret"
+            mkdir -p "$HOME/.kube"
+            echo "${KUBECONFIG_SECRET}" > "$HOME/.kube/config"
+          elif [ -n "${EKS_CLUSTER_NAME_SECRET}" ]; then
+            echo "Updating kubeconfig for EKS cluster: ${EKS_CLUSTER_NAME_SECRET}"
+            aws eks update-kubeconfig --name "${EKS_CLUSTER_NAME_SECRET}" --region "${AWS_REGION}"
+          else
+            echo "No kubeconfig configuration provided (set KUBECONFIG or EKS_CLUSTER_NAME)"
+            exit 1
+          fi
+
+      - name: Helm upgrade (Trivy-gated)
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_ref="${{ inputs.image }}"
+          image_tag="$(echo "${image_ref}" | awk -F: '{print $NF}')"
+          image_repo="$(echo "${image_ref}" | cut -d/ -f2- | awk -F: '{print $1}')"
+          echo "Upgrading release '${{ inputs.helm_release }}' in namespace '${{ inputs.helm_namespace }}' with image repo '${image_repo}' and tag '${image_tag}'"
+          helm upgrade --install "${{ inputs.helm_release }}" "weather_aggregator-feature-iac-networking/weather-chart" \
+            --namespace "${{ inputs.helm_namespace }}" \
+            --create-namespace \
+            -f "weather_aggregator-feature-iac-networking/values-prod.yaml" \
+            --set "image.repository=${image_repo}" \
+            --set "image.tag=${image_tag}" \
+            --wait

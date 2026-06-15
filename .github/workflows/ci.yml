@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  delivery:
+    uses: SasunIspiryan/ci-templates/.github/workflows/build-scan.yml@v1
+    with:
+      image: docker.io/SasunIspiryan/weather:${{ github.sha }}
+      helm_release: weather-aggregator
+      helm_namespace: weather
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      KUBECONFIG: ${{ secrets.KUBECONFIG }}
+      EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+      GITHUB_TOKEN_WRITE: ${{ secrets.GITHUB_TOKEN_WRITE }}
+
+
+
+
