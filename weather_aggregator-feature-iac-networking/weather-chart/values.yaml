@@ -7,6 +7,7 @@ service:
   type: ClusterIP
   port: 80
   targetPort: 5000
+  metricsPort: 8000
 ingress:
   enabled: true
   host: genesis.local
@@ -16,3 +17,5 @@ config:
   logLevel: "info"
 db:
   secretName: weather-db-creds
+monitoring:
+  enabled: true

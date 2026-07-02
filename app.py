@@ -2,14 +2,24 @@
 # IMPORTS
 # --------------------------------
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, Response, request
 import requests
 import os
+import re
+import time
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from flask_cors import CORS
+from prometheus_client import (
+    CollectorRegistry,
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Histogram,
+    generate_latest,
+    start_http_server,
+)
 
 # --------------------------------
 # LOAD ENV VARIABLES
@@ -20,6 +30,57 @@ load_dotenv()
 app = Flask(__name__)
 
 CORS(app)
+
+REGISTRY = CollectorRegistry(auto_describe=True)
+REQUESTS = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "path", "code"],
+    registry=REGISTRY,
+)
+LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "Request latency",
+    ["path"],
+    registry=REGISTRY,
+)
+
+
+def get_path_template():
+    if request.url_rule and request.url_rule.rule:
+        return re.sub(r"<[^>]+>", "{param}", str(request.url_rule.rule))
+    return request.path or "/"
+
+
+@app.before_request
+def start_timer():
+    request._start_time = time.perf_counter()
+
+
+@app.after_request
+def record_metrics(response):
+    duration = time.perf_counter() - getattr(request, "_start_time", time.perf_counter())
+    path_template = get_path_template()
+    REQUESTS.labels(
+        method=request.method,
+        path=path_template,
+        code=str(response.status_code),
+    ).inc()
+    LATENCY.labels(path=path_template).observe(duration)
+    return response
+
+
+@app.route("/metrics")
+def metrics():
+    return Response(generate_latest(REGISTRY), mimetype=CONTENT_TYPE_LATEST)
+
+
+PROMETHEUS_METRICS_PORT = int(os.getenv("PROMETHEUS_METRICS_PORT", "8000"))
+if os.getenv("PROMETHEUS_METRICS_ENABLED", "true").lower() == "true":
+    try:
+        start_http_server(PROMETHEUS_METRICS_PORT, registry=REGISTRY)
+    except OSError:
+        pass
 
 # --------------------------------
 # ENV CONFIG
@@ -34,10 +95,14 @@ DB_NAME = os.getenv("POSTGRES_DB", "weather_db")
 DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
 
-# PostgreSQL connection string
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+# Use Postgres when credentials are provided; otherwise fall back to SQLite for local/test runs.
+if DB_USER and DB_PASS and DB_HOST:
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///weather.db"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"check_same_thread": False}}
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
