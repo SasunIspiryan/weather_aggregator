@@ -23,6 +23,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+              name: http
+            - containerPort: {{ .Values.service.metricsPort }}
+              name: metrics
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-config

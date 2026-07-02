@@ -34,8 +34,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application source code
 COPY . .
 
-# Expose the Flask development server port
-EXPOSE 5000
+# Expose the Flask application and metrics ports
+EXPOSE 5000 8000
 
 # Health check (optional but recommended)
 # Verifies that the Flask application is responding to requests
