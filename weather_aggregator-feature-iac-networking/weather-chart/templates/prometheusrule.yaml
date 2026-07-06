@@ -1,0 +1,26 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.slo.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-slo
+  labels:
+    release: kps
+spec:
+  groups:
+    - name: {{ .Chart.Name }}.slo
+      rules:
+        - alert: WeatherHighErrorRate
+          expr: |
+            (
+              (sum(rate(http_requests_total{code=~"5..",namespace="{{ .Release.Namespace }}"}[{{ .Values.monitoring.slo.availability.rateWindow }}])) or vector(0))
+              /
+              clamp_min((sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}"}[{{ .Values.monitoring.slo.availability.rateWindow }}])) or vector(0)), 0.001)
+            ) > {{ .Values.monitoring.slo.availability.errorRateThreshold }}
+          for: {{ .Values.monitoring.slo.availability.for }}
+          labels:
+            severity: critical
+          annotations:
+            summary: "weather API 5xx rate above {{ printf "%.1f" (mulf .Values.monitoring.slo.availability.errorRateThreshold 100.0) }}%"
+            description: "5xx ratio is {{ `{{` }} $value | humanizePercentage {{ `}}` }} over {{ .Values.monitoring.slo.availability.rateWindow }} in namespace {{ .Release.Namespace }}."
+            runbook_url: "https://example.local/runbooks/weather-high-error-rate"
+{{- end }}

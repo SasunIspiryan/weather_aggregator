@@ -1,0 +1,16 @@
+alertmanager:
+  config:
+    route:
+      receiver: sink
+      group_wait: 30s
+      group_interval: 2m
+      repeat_interval: 2h
+      routes:
+        - matchers:
+            - severity="critical"
+          receiver: sink
+    receivers:
+      - name: sink
+        webhook_configs:
+          - url: REDACTED_SET_VIA_PRIVATE_VALUES
+            send_resolved: true
